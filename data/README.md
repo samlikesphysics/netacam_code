@@ -18,7 +18,7 @@ LAND_COVERS (7)
 
 YEAR (15)
 
-SECTORS (1103)
+SECTORS (1108)
 ```
 
 

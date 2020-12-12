@@ -2,3 +2,5 @@
 .ipynb_checkpoints/
 data/**/*.csv
 /**/*.npy
+**/._*
+**/.DS_Store

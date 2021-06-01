@@ -1,12 +1,27 @@
 import numpy as np
-from tqdm import tqdm
-from functools import reduce
 from stoclust.Group import Group
-from stoclust.Aggregation import Aggregation
 from stoclust.Hierarchy import Hierarchy
 import geopandas
 
 class GTAP:
+    '''
+    A class which is useful for interfacing
+    with the GTAP data set.
+
+    The sectors, regions, commodities and factors
+    of GTAP 8 are stored as Groups within Hierarchies,
+    which are classes from the stoclust
+    package. These Hierarchies allow one to
+    easily aggregate variables into natural categories.
+
+    The fetch_sam, fetch_carbon, fetch_labor,
+    and similar functions allow for the interfacing to
+    GTAP's satellite data in a manner that naturally incorporates
+    Aggregations and Hierarchies.
+
+    The geodata method delivers a Pandas GeoDataFrame
+    which can be used for making Choropleths.
+    '''
     def __init__(self):
         sectors = Group(np.load('scripts/data/ID/sectors.npy'))
         regions = Group(np.load('scripts/data/ID/regions.npy'))
@@ -17,9 +32,6 @@ class GTAP:
         imports = Group(['m_'+c for c in commodities], superset=sectors)
         activities = Group(['a_'+c for c in commodities], superset=sectors)
         domestic = Group(['d_'+c for c in commodities], superset=sectors)
-        commodity_sectors = Group(['m_'+c for c in commodities]
-                                    +['d_'+c for c in commodities]
-                                    +['a_'+c for c in commodities], superset=sectors)
 
         tariffs = Group(['tmm_'+r for r in regions]+['tee_'+r for r in regions],superset=sectors)
         duties = Group(['tssm_'+c for c in commodities]+['tssd_'+c for c in commodities],superset=sectors)
@@ -103,37 +115,50 @@ class GTAP:
 
         # Creating the commodity hierarchy
         vegetable = Group(['pdr', 'wht', 'gro', 'v_f', 'osd', 'c_b', 'pfb', 'ocr'],superset=commodities)
-        animal = Group(['ctl', 'oap', 'rmk', 'wol'],superset=commodities)
+        animal = Group(['ctl', 'oap', 'rmk', 'wol','fsh'],superset=commodities)
         food_prod = Group(['cmt','omt','vol','mil','pcr','sgr','ofd','b_t'],superset=commodities)
 
-        extraction = Group(['coa','oil','gas','omn'],superset=commodities)
+        energy_extraction = Group(['coa','oil','gas'],superset=commodities)
 
         light_manufacture = Group(['tex','wap','lea','lum','ppp'],superset=commodities)
 
-        heavy_manufacture = Group(['p_c','crp','nmm','i_s','nfm','fmp','mvh','otn','ele','ome','omf'],superset=commodities)
+        chemical_manufacture = Group(['p_c','crp',],superset=commodities)
+        material_manufacture = Group(['nmm','nfm'],superset=commodities)
+        product_manufacture = Group(['mvh','otn','ele','ome','omf','fmp'],superset=commodities)
 
         utility = Group(['ely','gdt','wtr'],superset=commodities)
         margins = Group(['otp','wtp','atp'],superset=commodities)
         business = Group(['ofi','isr','obs'],superset=commodities)
+        public = Group(['cmn','ros','osg'],superset=commodities)
+
+        new_names = list(commodities)
+        new_names[commodities.ind['i_s']] = 'Iron/Steel'
+        new_names[commodities.ind['dwe']] = 'Dwellings'
+        new_names[commodities.ind['cns']] = 'Construction'
+        new_names[commodities.ind['trd']] = 'Trade and Retail'
+        new_names[commodities.ind['omn']] = 'Mineral Extraction'
 
         self.commodities = Hierarchy(
             commodities,
             Group(
                 list(commodities)+
                 [
-                    'vegetable',
-                    'animal',
-                    'food_prod',
-                    'light_manufacture',
-                    'heavy_manufacture',
-                    'utility',
-                    'margins',
-                    'business',
-                    'land_use',
-                    'food_and_game',
-                    'extraction',
-                    'manufacture',
-                    'services',
+                    'Plant Harvest',
+                    'Animal Harvest',
+                    'Food Product',
+                    'Light Material',
+                    'Manufactured Chemical',
+                    'Non-Ferrous Material',
+                    'Manufactured Product',
+                    'Utility Distribution',
+                    'Transportation',
+                    'Business Service',
+                    'Public Service',
+                    'All Land Use',
+                    'Energy Extraction',
+                    'All Extraction',
+                    'All Manufacturing',
+                    'All Services',
                 ],
             ),
             {
@@ -141,35 +166,59 @@ class GTAP:
                 commodities.size+1 : (1,animal.in_superset),
                 commodities.size+2 : (1,food_prod.in_superset),
                 commodities.size+3 : (1,light_manufacture.in_superset),
-                commodities.size+4 : (1,heavy_manufacture.in_superset),
-                commodities.size+5 : (1,utility.in_superset),
-                commodities.size+6 : (1,margins.in_superset),
-                commodities.size+7 : (1,business.in_superset),
-                commodities.size+8 : (2,np.array([
+                commodities.size+4 : (1,chemical_manufacture.in_superset),
+                commodities.size+5 : (1,material_manufacture.in_superset),
+                commodities.size+6 : (1,product_manufacture.in_superset),
+                commodities.size+7 : (1,utility.in_superset),
+                commodities.size+8 : (1,margins.in_superset),
+                commodities.size+9 : (1,business.in_superset),
+                commodities.size+10 : (1,public.in_superset),
+                commodities.size+11 : (2,np.array([
                                             commodities.size+0,
                                             commodities.size+1,
                                             commodities.ind['frs']
                                         ])),
-                commodities.size+9 : (3,np.array([
-                                            commodities.size+8,
-                                            commodities.size+2,
-                                            commodities.ind['fsh']
+                commodities.size+12 : (1,energy_extraction.in_superset),
+                commodities.size+13 : (3,np.array([
+                                            commodities.size+12,
+                                            commodities.ind['omn']
                                         ])),
-                commodities.size+10 : (1,extraction.in_superset),
-                commodities.size+11 : (3,np.array([
+                commodities.size+14 : (3,np.array([
+                                            commodities.size+2,
                                             commodities.size+3,
                                             commodities.size+4,
-                                        ])),
-                commodities.size+12 : (2,np.array([
+                                            commodities.size+5,
                                             commodities.size+6,
-                                            commodities.size+7,
+                                        ])),
+                commodities.size+15 : (3,np.array([
+                                            commodities.size+8,
+                                            commodities.size+9,
+                                            commodities.size+10,
                                             commodities.ind['trd'],
-                                            commodities.ind['cmn'],
-                                            commodities.ind['ros'],
-                                            commodities.ind['osg']
                                         ])),
             }
         )
+
+        self.commodities.clusters = Group(np.array(
+            new_names + [
+                    'Plant Harvest',
+                    'Animal Harvest',
+                    'Food Product',
+                    'Light Material',
+                    'Manufactured Chemical',
+                    'Non-Ferrous Material',
+                    'Manufactured Product',
+                    'Utility Distribution',
+                    'Transportation',
+                    'Business Services',
+                    'Public Services',
+                    'All Land Use',
+                    'Energy Extraction',
+                    'All Extraction',
+                    'All Manufacturing',
+                    'All Services',
+                ],
+        ))
 
         energy = Group(np.load('scripts/data/ID/commodities_energy.npy'),superset=commodities)
         fuels = Group(np.load('scripts/data/ID/commodities_fuel.npy'),superset=commodities)
@@ -215,6 +264,45 @@ class GTAP:
                 carbon_mat_sectors.size+1 : (1,f_domestic.in_superset)
             }
         )
+
+        mam_sectors = Group(
+            ['d_'+c for c in commodities]+
+            ['m_'+c for c in commodities]+
+            ['x_'+c for c in commodities]+
+            ['PRIV','GOVT','KDEP','CGDS']+
+            ['ww_'+r for r in regions]
+        )
+
+        mam_imports = Group(['m_'+c for c in commodities],superset=mam_sectors)
+        mam_domestic = Group(['d_'+c for c in commodities],superset=mam_sectors)
+        mam_exports = Group(['x_'+c for c in commodities],superset=mam_sectors)
+        mam_capital = Group(['KDEP','CGDS'],superset=mam_sectors)
+        mam_consumption = Group(['PRIV','GOVT'],superset=mam_sectors)
+        mam_regions = Group(['ww_'+r for r in regions],superset=mam_sectors)
+
+        self.mam_sectors = Hierarchy(
+            mam_sectors,
+            Group(
+                list(mam_sectors)+
+                [
+                    'domestic',
+                    'imports',
+                    'exports',
+                    'consumers',
+                    'capital',
+                    'trade',
+                ]
+            ),
+            {
+                mam_sectors.size+0 : (1,mam_domestic.in_superset),
+                mam_sectors.size+1 : (1,mam_imports.in_superset),
+                mam_sectors.size+2 : (1,mam_exports.in_superset),
+                mam_sectors.size+3 : (1,mam_consumption.in_superset),
+                mam_sectors.size+4 : (1,mam_capital.in_superset),
+                mam_sectors.size+5 : (1,mam_regions.in_superset),
+            }
+        )
+
         # Land cover and times
         self.covers = Group(np.load('scripts/data/ID/covers.npy'))
         self.years = Group(np.load('scripts/data/ID/years.npy'))
@@ -228,8 +316,8 @@ class GTAP:
             Group(
                 list(factors)+
                 [
-                    'land',
-                    'labor'
+                    'Land',
+                    'Labor'
                 ]
             ),
             {
@@ -450,12 +538,12 @@ class GTAP:
             region_inds = regions.in_superset
 
         if supply is None:
-            supply_inds = np.arange(self.factors['land'].size)
+            supply_inds = np.arange(self.factors['Land'].size)
         else:
             supply_inds = supply.in_superset
         
         if demand is None:
-            demand_inds = np.arange(self.commodities['vegetable'].size)
+            demand_inds = np.arange(self.commodities['Plant Harvest'].size)
         else:
             demand_inds = demand.in_superset
 
@@ -469,12 +557,12 @@ class GTAP:
             region_inds = regions.in_superset
 
         if supply is None:
-            supply_inds = np.arange(self.factors['land'].size)
+            supply_inds = np.arange(self.factors['Land'].size)
         else:
             supply_inds = supply.in_superset
         
         if demand is None:
-            demand_inds = np.arange(self.commodities['vegetable'].size)
+            demand_inds = np.arange(self.commodities['Plant Harvest'].size)
         else:
             demand_inds = demand.in_superset
 
@@ -488,12 +576,12 @@ class GTAP:
             region_inds = regions.in_superset
 
         if supply is None:
-            supply_inds = np.arange(self.factors['land'].size)
+            supply_inds = np.arange(self.factors['Land'].size)
         else:
             supply_inds = supply.in_superset
         
         if demand is None:
-            demand_inds = np.arange(self.commodities['vegetable'].size)
+            demand_inds = np.arange(self.commodities['Plant Harvest'].size)
         else:
             demand_inds = demand.in_superset
 
@@ -512,7 +600,7 @@ class GTAP:
             supply_inds = supply.in_superset
         
         if demand is None:
-            demand_inds = np.arange(self.factors['land'].size)
+            demand_inds = np.arange(self.factors['Land'].size)
         else:
             demand_inds = demand.in_superset
 
@@ -572,7 +660,7 @@ class GTAP:
 
   #  def fetch_sam(self):
 
-    def geodata(self,data=None,columns=None,show_regions=None):
+    def geodata(self,data=None,show_regions=None):
         world = geopandas.read_file(geopandas.datasets.get_path('naturalearth_lowres'))
         world.iso_a3[world.name=='France'] = 'FRA'
         world.iso_a3[world.name=='Kosovo'] = 'XK'

@@ -1,5 +1,7 @@
 *.ipynb
 .ipynb_checkpoints/
+plots/*
+*.png
 data/**/*.csv
 /**/*.npy
 **/._*

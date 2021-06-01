@@ -1,5 +1,26 @@
 Some information on how to use the data.
 
+The GTAP 8 database can be acquired freely from the website:
+https://www.gtap.agecon.purdue.edu/databases/v8/
+
+The GMig2 can be accessed as well from this site as a satellite data set.
+This README also shows how to use the Land Use and Land Cover satellite data set,
+though this is not necessary for our own work. If you choose
+not to use this dataset then you may simply ignore any code
+involving land and land covers in the notebooks.
+
+It comes in the form of a Windows program where the user
+can set an aggregation and then view two-dimensional cross sections
+of the many multidimensional arrays which comprise the dataset.
+These cross-sections can be extracted as CSV files.
+The reader will have to manually extract each array
+to use the code in this repository. The same is true for GMig2.
+
+The variables in the GTAP dataset are sorted into hierarchical groups.
+For a useful description of the GTAP 8 structure we recommend
+the supplementary material of [1].
+We list the group names followed by the (size) below.
+
 ```
 PROD_COMMODS (58)
     TRAD_COMMODS (57)
@@ -21,6 +42,15 @@ YEAR (15)
 SECTORS (1108)
 ```
 
+The following is both a schematic of how to store the files
+pulled and a recommendation for the order in which to pull the tables.
+Recall that each table can only be pulled as a two-dimensional cross-section.
+For >2 dimensional arrays, the last two dimensions listed will be those of the cross-section;
+the preceding dimensions correspond to the numbering scheme in the folder.
+Any arrays whose dimensions include FACTORS or LABOR_FACTORS must be sourced from
+GMig2. Similarly, if using the Land Use and Land Cover dataset,
+then any arrays using LAND_COMMODS, LAND_COVERS or LAND_FACTORS must be sourced
+from here.
 
 ```
 data/
@@ -45,6 +75,9 @@ data/
         ...
         6.csv
     LCOV/           (LAND_COVERS x REGIONS x LAND_FACTORS)
+        1.csv
+        ...
+        7.csv
     MDF/            (FUEL_COMMODS x PROD_COMMODS x REGIONS)
         1.csv
         ...
@@ -111,7 +144,6 @@ data/
     SAVE.csv        (REGIONS)
     SSET.csv        (SECTORS)
     VOM.csv         (FACTORS x REGIONS)
-    YQHF.csv        (REGIONS)
-    YQHT.csv        (REGIONS)
-    YQTF.csv        (REGIONS)
 ```
+
+[1] "Bound by Chains of Carbon." Luke Bergmann. 2013

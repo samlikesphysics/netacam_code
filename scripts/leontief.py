@@ -1,12 +1,10 @@
 import numpy as np
-from tqdm import tqdm
-from functools import reduce
-import scipy.linalg as la
-from stoclust.Group import Group
-from stoclust.Aggregation import Aggregation
-from stoclust.Hierarchy import Hierarchy
 
-def divide_and_conquer(block_mats,tier_names = None):
+def divide_and_conquer(block_mats,tier_names = None,output=True):
+    '''
+    A script for computing the inverse matrix of a large matrix,
+    divided into blocks in order to track progress.
+    '''
     num_tiers = len(block_mats)
     
     inv_mats = [[] for j in range(num_tiers)]
@@ -15,19 +13,22 @@ def divide_and_conquer(block_mats,tier_names = None):
         tier_names = np.arange(num_tiers).astype(str)
 
     for j in range(num_tiers):
-        print('Computing tier '+tier_names[j]+'...')
+        if output:
+            print('Computing tier '+tier_names[j]+'...')
         if j == 0:
             inv = la.inv(np.eye(block_mats[j][j].shape[0]) - block_mats[j][j])
             inv_mats[0].append(inv)
         elif j > 0:
             mat = block_mats[j][j].copy()
-            print('\tComputing new inverse...')
+            if output:
+                print('\tComputing new inverse...')
             for k in range(j):
                 for l in range(j):
                     mat += block_mats[j][k]@inv_mats[k][l]@block_mats[l][j]
             inv = la.inv(np.eye(block_mats[j][j].shape[0]) - mat)
 
-            print('\tAdding new columns and rows...')
+            if output:
+                print('\tAdding new columns and rows...')
             for k in range(j):
                 # Add new column
                 mat = np.zeros(block_mats[k][j].shape)
@@ -42,7 +43,8 @@ def divide_and_conquer(block_mats,tier_names = None):
                 inv_mats[j].append(mat)
 
             new_mats = []
-            print('\tUpdating old entries...')
+            if output:
+                print('\tUpdating old entries...')
             for k in range(j):
             # Update old entries
                 new_new_mats = []

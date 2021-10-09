@@ -1,4 +1,10 @@
 # Notebooks and Scripts for "Nonequilibirum Thermodynamics and Carbon Accounting Methods" 
+**NOTE: This repository has been modified to correct a faulty import and to add
+an internal module of the `stoclust` package from an earlier version, as recent
+changes have rendered the up-to-date package incompatible with this repository.
+No other code has been modified. An older version of this repository can be
+found in previous commits.**
+
 This repository contains notebooks for reproducing the graphs and numerical results
 of our manuscript []. In addition, the notebooks and scripts have some flexibility that should
 allow for further exploration of the concepts by any interested investigators.

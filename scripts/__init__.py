@@ -5,7 +5,5 @@ from scripts.blocks import null_blocks
 from scripts.lorenz import rank
 from scripts.lorenz import order
 from scripts.lorenz import lorenz_curve
-from scripts.lorenz import diffuse_net
-from scripts.lorenz import diffuse_ratio
 from scripts.lorenz import is_majorized
 from scripts.lorenz import dismajorization

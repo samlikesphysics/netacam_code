@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.linalg as la
 
 def divide_and_conquer(block_mats,tier_names = None,output=True):
     '''
